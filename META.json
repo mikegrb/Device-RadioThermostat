@@ -1,5 +1,5 @@
 {
-   "abstract" : "Blah blah blah",
+   "abstract" : "Access Radio Thermostat Co of America (3M-Filtrete) WiFi thermostats",
    "author" : [
       "Mike Greb <michael@thegrebs.com>"
    ],
@@ -36,7 +36,8 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "Mojolicious" : "0",
+            "perl" : "5.010001"
          }
       },
       "test" : {
@@ -46,6 +47,9 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.01"
+   "version" : "0.01",
+   "x_contributors" : [
+      "mikegrb <mgreb@linode.com>"
+   ]
 }
 
