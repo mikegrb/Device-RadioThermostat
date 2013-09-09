@@ -51,7 +51,7 @@ also set current mode to heating.
 Set a temporary cooling set point, takes one argument the desired target.  Will
 also set current mode to cooling.
 
-head2 remote\_temp
+## remote\_temp
 
 Returns a reference to a hash containing at least `rem_mode` but possibly also
 `rem_temp`.  When `rem_temp` is 1, the temperature passed to `set_remote_temp`
