@@ -140,18 +140,18 @@ Retrieve lots of infos from the thermostat.  Your goto for the 411 on your therm
 
 =head2 set_mode
 
-Takes a single integer argument for your desired mode. Values are 0 - OFF, 1 -
-HEAT, 2 - COOL, 3 - AUTO.
+Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
+heating, 2 for cooling, and 3 for auto.
 
 =head2 get_target
 
 Returns undef if current mode is off.  Returns heat or cooling set point based
-on the current mode.  If current mode is AUTO returns a reference to a two
+on the current mode.  If current mode is auto returns a reference to a two
 element array containing the cooling and heating set points.
 
 =head2 get_targets
 
-Returns a reference to a hash of the set points.  Keys are 't_cool' and 't_heat'.
+Returns a reference to a hash of the set points.  Keys are C<t_cool> and C<t_heat>.
 
 =head2 temp_heat
 
@@ -166,7 +166,7 @@ also set current mode to cooling.
 =head2 remote_temp
 
 Returns a reference to a hash containing at least C<rem_mode> but possibly also
-C<rem_temp>.  When C<rem_temp> is 1, the temperature passed to C<set_remote_temp>
+C<rem_temp>.  When C<rem_mode> is 1, the temperature passed to C<set_remote_temp>
 is used instead of the thermostats internal temp sensor for thermostat operation.
 
 This can be used to have the thermostat act as if it was installed in a better

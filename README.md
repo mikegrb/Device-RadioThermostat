@@ -28,18 +28,18 @@ Retrieve lots of infos from the thermostat.  Your goto for the 411 on your therm
 
 ## set\_mode
 
-Takes a single integer argument for your desired mode. Values are 0 - OFF, 1 -
-HEAT, 2 - COOL, 3 - AUTO.
+Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
+heating, 2 for cooling, and 3 for auto.
 
 ## get\_target
 
 Returns undef if current mode is off.  Returns heat or cooling set point based
-on the current mode.  If current mode is AUTO returns a reference to a two
+on the current mode.  If current mode is auto returns a reference to a two
 element array containing the cooling and heating set points.
 
 ## get\_targets
 
-Returns a reference to a hash of the set points.  Keys are 't\_cool' and 't\_heat'.
+Returns a reference to a hash of the set points.  Keys are `t_cool` and `t_heat`.
 
 ## temp\_heat
 
@@ -54,7 +54,7 @@ also set current mode to cooling.
 ## remote\_temp
 
 Returns a reference to a hash containing at least `rem_mode` but possibly also
-`rem_temp`.  When `rem_temp` is 1, the temperature passed to `set_remote_temp`
+`rem_temp`.  When `rem_mode` is 1, the temperature passed to `set_remote_temp`
 is used instead of the thermostats internal temp sensor for thermostat operation.
 
 This can be used to have the thermostat act as if it was installed in a better
