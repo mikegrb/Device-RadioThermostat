@@ -18,7 +18,7 @@ with WiFi are OEM versions manufactured by RTCOA.
 # METHODS
 
 For additional information on the arguments and values returned see the
-[RTCOA API documentation](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
+[RTCOA API documentation (pdf)](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
 
 ## new( address=> 'http://192.168.1.1')
 
@@ -31,7 +31,7 @@ Retrieve a hash of lots of info on the current thermostat state.  Possible keys
 include: `temp`, `tmode`, `fmode`, `override`, `hold`, `t_heat`,
 `t_cool`, `it_heat`, `It_cool`, `a_heat`, `a_cool`, `a_mode`,
 `t_type_post`, `t_state`.  For a description of their values see the
-[RTCOA API documentation](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
+[RTCOA API documentation (pdf)](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
 
 ## set\_mode($mode)
 

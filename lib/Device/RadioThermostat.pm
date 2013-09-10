@@ -149,7 +149,7 @@ with WiFi are OEM versions manufactured by RTCOA.
 =head1 METHODS
 
 For additional information on the arguments and values returned see the
-L<RTCOA API documentation|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
+L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
 
 =head2 new( address=> 'http://192.168.1.1')
 
@@ -162,7 +162,7 @@ Retrieve a hash of lots of info on the current thermostat state.  Possible keys
 include: C<temp>, C<tmode>, C<fmode>, C<override>, C<hold>, C<t_heat>,
 C<t_cool>, C<it_heat>, C<It_cool>, C<a_heat>, C<a_cool>, C<a_mode>,
 C<t_type_post>, C<t_state>.  For a description of their values see the
-L<RTCOA API documentation|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
+L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
 
 =head2 set_mode($mode)
 
