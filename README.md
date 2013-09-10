@@ -104,6 +104,23 @@ mentioned in the API docs and I'm not home currently.
 Clears the `price_message` area.  May also clear the `user_message`, I'd
 appreciate someone with a CT-80 letting me know.
 
+## datalog
+
+Returns individual run times for heating and cooling yesterday and today.  This
+method isn't documented in the current API so it may go away in the future but
+does still work with the latest firmware. Sample data:
+
+    $data = {
+              'today' => {
+                         'cool_runtime' => { 'minute' => 29, 'hour' => 2 },
+                         'heat_runtime' => { 'minute' => 0,  'hour' => 0 }
+                       },
+              'yesterday' => {
+                         'heat_runtime' => { 'minute' => 0,  'hour' => 0 },
+                         'cool_runtime' => { 'minute' => 14, 'hour' => 0 }
+                       }
+            };
+
 # AUTHOR
 
 Mike Greb <michael@thegrebs.com>
