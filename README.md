@@ -6,8 +6,8 @@ Device::RadioThermostat - Access Radio Thermostat Co of America (3M-Filtrete) Wi
 
     use Device::RadioThermostat;
     my $thermostat = Device::RadioThermostat->new( address => "http://$ip");
-
-
+    $thermostat->temp_cool(65);
+    say "It is currently " . $thermostat->tstat()->{temp} "F inside.";
 
 # DESCRIPTION
 
@@ -17,6 +17,9 @@ with WiFi are OEM versions manufactured by RTCOA.
 
 # METHODS
 
+For additional information on the arguments and values returned see the
+[RTCOA API documentation](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
+
 ## new( address=> 'http://192.168.1.1')
 
 Constructor takes named parameters.  Currently only `address` which should be
@@ -24,9 +27,13 @@ the HTTP URL for the thermostat.
 
 ## tstat
 
-Retrieve lots of infos from the thermostat.  Your goto for the 411 on your thermostat.
+Retrieve a hash of lots of info on the current thermostat state.  Possible keys
+include: `temp`, `tmode`, `fmode`, `override`, `hold`, `t_heat`,
+`t_cool`, `it_heat`, `It_cool`, `a_heat`, `a_cool`, `a_mode`,
+`t_type_post`, `t_state`.  For a description of their values see the
+[RTCOA API documentation](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
 
-## set\_mode
+## set\_mode($mode)
 
 Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
 heating, 2 for cooling, and 3 for auto.
@@ -41,12 +48,12 @@ element array containing the cooling and heating set points.
 
 Returns a reference to a hash of the set points.  Keys are `t_cool` and `t_heat`.
 
-## temp\_heat
+## temp\_heat($temp)
 
 Set a temporary heating set point, takes one argument the desired target.  Will
 also set current mode to heating.
 
-## temp\_cool
+## temp\_cool($temp)
 
 Set a temporary cooling set point, takes one argument the desired target.  Will
 also set current mode to cooling.
@@ -61,7 +68,7 @@ This can be used to have the thermostat act as if it was installed in a better
 location by feeding the temp from a sensor at that location to the thermostat
 periodically.
 
-## set\_remote\_temp
+## set\_remote\_temp($temp)
 
 Takes a single value to set the current remote temp.
 
@@ -69,6 +76,33 @@ Takes a single value to set the current remote temp.
 
 Disables remote\_temp mode and reverts to using the thermostats internal temp
 sensor.
+
+## lock
+
+## lock($mode)
+
+With mode specified, sets mode and returns false on failure.  With successful
+mode change or no mode specified, returns the current mode.  Mode is an integer,
+0 - disabled, 1 - partial lock, 2 - full lock, 3 - utility lock.
+
+## user\_message($line, $message)
+
+Display a message on one of the two lines of alphanumeric display at the bottom
+of the thermostat.  Valid values for line are 0 and 1.  Messages too long will
+scroll.  This is only supported by the CT-80 model thermostats.
+
+## price\_message($line, $message)
+
+Display a message in the price message area on the thermostat.  Messages can be
+numeric plus decimal only.  Valid values for line are 0 - 3.  Multiple messages
+for different lines are rotated through.  I believe line number used will cause
+an indicator for units to display based on the number used but it's not
+mentioned in the API docs and I'm not home currently.
+
+## clear\_message
+
+Clears the `price_message` area.  May also clear the `user_message`, I'd
+appreciate someone with a CT-80 letting me know.
 
 # AUTHOR
 
