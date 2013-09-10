@@ -94,6 +94,11 @@ sub price_message {
     return $self->_ua_post( '/tstat/pma', { line => $line, message => $message } );
 }
 
+sub clear_message {
+    my ($self) = @_;
+    return $self->_ua_post( '/tstat/pma', { mode => 0 } );
+}
+
 sub datalog {
     my ($self) = @_;
     return $self->_ua_get('/tstat/datalog');

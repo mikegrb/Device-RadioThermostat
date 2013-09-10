@@ -2,6 +2,7 @@ Revision history for Device-RadioThermostat
 
 {{$NEXT}}
         - Add datalog method
+        - implement clear_message which was in the POD but left out of the code
         - Indicate that the links for API docs are links to a pdf
 
 0.01  2013-09-09 23:17:45 EDT
