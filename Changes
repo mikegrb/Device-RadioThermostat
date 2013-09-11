@@ -1,6 +1,8 @@
 Revision history for Device-RadioThermostat
 
 {{$NEXT}}
+
+0.02  2013-09-10 22:06:25 EDT
         - Add datalog method
         - implement clear_message which was in the POD but left out of the code
         - remove leftover use Data::Printer in the module
