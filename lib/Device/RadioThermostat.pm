@@ -8,7 +8,6 @@ our $VERSION = '0.01';
 
 use Carp;
 use Mojo::UserAgent;
-use Data::Printer;
 
 sub new {
     my ( $class, %args ) = @_;
