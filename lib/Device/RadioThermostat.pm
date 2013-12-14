@@ -191,8 +191,6 @@ sub _ua_get {
 1;
 __END__
 
-=encoding utf-8
-
 =head1 NAME
 
 Device::RadioThermostat - Access Radio Thermostat Co of America (3M-Filtrete) WiFi thermostats
