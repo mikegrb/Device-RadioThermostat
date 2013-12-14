@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use 5.010_001;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp;
 use Mojo::UserAgent;
@@ -22,6 +22,16 @@ sub new {
 sub tstat {
     my $self = shift;
     return $self->_ua_get('/tstat');
+}
+
+sub sys {
+    my $self = shift;
+    return $self->_ua_get('/sys');
+}
+
+sub get_uuid {
+    my $self = shift;
+    return $self->sys()->{uuid};
 }
 
 sub set_mode {
