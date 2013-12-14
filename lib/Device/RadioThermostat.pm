@@ -38,8 +38,6 @@ sub find_all {
 	    usleep 10000;
 	}
 
-	usleep 50000;
-
 	my $rin = "";
 	vec($rin, $s->fileno, 1) = 1;
 	my $rout;
@@ -131,7 +129,7 @@ sub disable_remote_temp {
 
 sub set_remote_temp {
     my ( $self, $temp ) = @_;
-    return $self->_ua_post( '/tstat/remote_temp', { rem_temp => $temp } );
+    return $self->_ua_post( '/tstat/remote_temp', { rem_temp => 0 + sprintf("%d", $temp) } );
 }
 
 sub lock {
