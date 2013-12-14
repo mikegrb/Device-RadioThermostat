@@ -19,6 +19,52 @@ sub new {
     return bless $self, $class;
 }
 
+sub find_all {
+    my ( $class, $low, $high ) = @_;
+    croak 'Must pass two addresses to find_all.' unless $low && $high;
+
+    use IO::Socket::INET;
+    use Time::HiRes qw(usleep);
+
+    my $s = IO::Socket::INET->new(Proto => 'udp') || croak @$;
+
+    for (my $retry = 0; $retry < 3; $retry++) {
+	for (my $addr = inet_aton($low); $addr <= inet_atom($high); $addr = pack("N", 1 + unpack("N", $addr)[0])) {
+	    my $hisaddr = sockaddr_in(1900, $addr);
+	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hisaddr);
+	    usleep 10000;
+	}
+
+	usleep 50000;
+
+	my $rin = "";
+	vec($rin, $s->fileno, 1) = 1;
+	my $rout;
+
+	my %result;
+
+	while (select($rout = $rin, undef, undef, 1)) {
+	    my $response = "";
+	    my $hispaddr = $s->recv($response, 1024, 0);
+	    my ($port, $hisiaddr) = sockaddr_in($hispaddr);
+	    my ($addr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
+	    next if (!$addr);
+
+	    my $tstat   = new Device::RadioThermostat(address => $addr);
+	    my $uuid = $tstat->get_uuid();
+	    next if (!$uuid);
+
+	    $result{$uuid} = $tstat;
+	}
+
+	if (%result) {
+	    return \%result;
+	}
+    }
+
+    return \%result;
+}
+
 sub tstat {
     my $self = shift;
     return $self->_ua_get('/tstat');
