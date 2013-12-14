@@ -30,8 +30,10 @@ sub find_all {
     my $s = IO::Socket::INET->new(Proto => 'udp') || croak @$;
 
     for (my $retry = 0; $retry < 3; $retry++) {
-	for (my $addr = inet_aton($low); $addr <= inet_atom($high); $addr = pack("N", 1 + (unpack("N", $addr))[0])) {
-	    my $hissockaddr = sockaddr_in(1900, $addr);
+	my ($lowint) = unpack("N", inet_aton($low));
+	my ($highint) = unpack("N", inet_aton($high));
+	for (my $addr = $lowint; $addr <= $highint; $addr++) {
+	    my $hissockaddr = sockaddr_in(1900, pack("N", $addr));
 	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hissockaddr);
 	    usleep 10000;
 	}
@@ -51,7 +53,7 @@ sub find_all {
 	    my ($hisaddr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
 	    next if (!$hisaddr);
 
-	    my $tstat   = new Device::RadioThermostat(address => $hisaddr);
+	    my $tstat   = new Device::RadioThermostat(address => 'http://' . $hisaddr);
 	    my $uuid = $tstat->get_uuid();
 	    next if (!$uuid);
 
@@ -171,7 +173,8 @@ sub _ua_post {
         return exists( $result->{success} ) ? 1 : 0;
     }
     else {
-        carp $response->code ? "$response->code response: $response->message" : "Connection error: $response->message";
+	my ($code, $err) = ($response->code, $response->message);
+        carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
 }
@@ -183,7 +186,8 @@ sub _ua_get {
         return decode_json $response->decoded_content();
     }
     else {
-        carp $response->code ? "$response->code response: $response->message" : "Connection error: $response->message";
+	my ($code, $err) = ($response->code, $response->message);
+        carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
 }
