@@ -30,9 +30,9 @@ sub find_all {
     my $s = IO::Socket::INET->new(Proto => 'udp') || croak @$;
 
     for (my $retry = 0; $retry < 3; $retry++) {
-	for (my $addr = inet_aton($low); $addr <= inet_atom($high); $addr = pack("N", 1 + unpack("N", $addr)[0])) {
-	    my $hisaddr = sockaddr_in(1900, $addr);
-	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hisaddr);
+	for (my $addr = inet_aton($low); $addr <= inet_atom($high); $addr = pack("N", 1 + (unpack("N", $addr))[0])) {
+	    my $hissockaddr = sockaddr_in(1900, $addr);
+	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hissockaddr);
 	    usleep 10000;
 	}
 
@@ -48,10 +48,10 @@ sub find_all {
 	    my $response = "";
 	    my $hispaddr = $s->recv($response, 1024, 0);
 	    my ($port, $hisiaddr) = sockaddr_in($hispaddr);
-	    my ($addr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
-	    next if (!$addr);
+	    my ($hisaddr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
+	    next if (!$hisaddr);
 
-	    my $tstat   = new Device::RadioThermostat(address => $addr);
+	    my $tstat   = new Device::RadioThermostat(address => $hisaddr);
 	    my $uuid = $tstat->get_uuid();
 	    next if (!$uuid);
 
@@ -63,7 +63,7 @@ sub find_all {
 	}
     }
 
-    return \%result;
+    return undef;
 }
 
 sub tstat {
