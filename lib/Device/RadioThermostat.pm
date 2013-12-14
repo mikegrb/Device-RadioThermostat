@@ -3,25 +3,82 @@ package Device::RadioThermostat;
 use strict;
 use warnings;
 
-use 5.010_001;
-our $VERSION = '0.02';
+use 5.008_001;
+our $VERSION = '0.03';
 
 use Carp;
-use Mojo::UserAgent;
+use LWP::UserAgent;
+use JSON;
 
 sub new {
     my ( $class, %args ) = @_;
     my $self = {
         address => $args{address},
-        ua      => Mojo::UserAgent->new() };
+        ua      => LWP::UserAgent->new() };
     croak 'Must pass address to new.' unless $self->{address};
 
     return bless $self, $class;
 }
 
+sub find_all {
+    my ( $class, $low, $high ) = @_;
+    croak 'Must pass two addresses to find_all.' unless $low && $high;
+
+    use IO::Socket::INET;
+    use Time::HiRes qw(usleep);
+
+    my $s = IO::Socket::INET->new(Proto => 'udp') || croak @$;
+
+    for (my $retry = 0; $retry < 3; $retry++) {
+	my ($lowint) = unpack("N", inet_aton($low));
+	my ($highint) = unpack("N", inet_aton($high));
+	for (my $addr = $lowint; $addr <= $highint; $addr++) {
+	    my $hissockaddr = sockaddr_in(1900, pack("N", $addr));
+	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hissockaddr);
+	    usleep 10000;
+	}
+
+	my $rin = "";
+	vec($rin, $s->fileno, 1) = 1;
+	my $rout;
+
+	my %result;
+
+	while (select($rout = $rin, undef, undef, 1)) {
+	    my $response = "";
+	    my $hispaddr = $s->recv($response, 1024, 0);
+	    my ($port, $hisiaddr) = sockaddr_in($hispaddr);
+	    my ($hisaddr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
+	    next if (!$hisaddr);
+
+	    my $tstat   = new Device::RadioThermostat(address => 'http://' . $hisaddr);
+	    my $uuid = $tstat->get_uuid();
+	    next if (!$uuid);
+
+	    $result{$uuid} = $tstat;
+	}
+
+	if (%result) {
+	    return \%result;
+	}
+    }
+
+    return undef;
+}
+
 sub tstat {
     my $self = shift;
     return $self->_ua_get('/tstat');
+}
+
+sub sys {
+    my $self = shift;
+    return $self->_ua_get('/sys');
+}
+
+sub get_uuid {
+    my $self = shift;
+    return $self->sys()->{uuid};
 }
 
 sub set_mode {
@@ -72,7 +129,7 @@ sub disable_remote_temp {
 
 sub set_remote_temp {
     my ( $self, $temp ) = @_;
-    return $self->_ua_post( '/tstat/remote_temp', { rem_temp => $temp } );
+    return $self->_ua_post( '/tstat/remote_temp', { rem_temp => 0 + sprintf("%d", $temp) } );
 }
 
 sub lock {
@@ -105,16 +162,16 @@ sub datalog {
 
 sub _ua_post {
     my ( $self, $path, $data ) = @_;
-    my $transaction
-        = $self->{ua}->post( $self->{address} . $path, json => $data );
-    if ( my $response = $transaction->success ) {
-        my $result = $response->json;
+    my $response
+        = $self->{ua}->post( $self->{address} . $path, content => encode_json $data );
+    if ( $response->is_success ) {
+        my $result = decode_json $response->decoded_content();
 
         # return $result;
         return exists( $result->{success} ) ? 1 : 0;
     }
     else {
-        my ( $err, $code ) = $transaction->error;
+	my ($code, $err) = ($response->code, $response->message);
         carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
@@ -122,12 +179,12 @@ sub _ua_post {
 
 sub _ua_get {
     my ( $self, $path ) = @_;
-    my $transaction = $self->{ua}->get( $self->{address} . $path );
-    if ( my $response = $transaction->success ) {
-        return $response->json;
+    my $response = $self->{ua}->get( $self->{address} . $path );
+    if ( $response->is_success ) {
+        return decode_json $response->decoded_content();
     }
     else {
-        my ( $err, $code ) = $transaction->error;
+	my ($code, $err) = ($response->code, $response->message);
         carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
@@ -135,8 +192,6 @@ sub _ua_get {
 
 1;
 __END__
-
-=encoding utf-8
 
 =head1 NAME
 
@@ -165,12 +220,34 @@ L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWi
 Constructor takes named parameters.  Currently only C<address> which should be
 the HTTP URL for the thermostat.
 
+=head2 find_all(address1, address2)
+
+This finds all the thermostats in the address range and returns a reference to a hash
+which contains Device::RadioThermostat objects indexed by the device uuid. For example,
+it might return a structure as follows:
+
+    Device::RadioThermostat->find_all("192.168.1.1", "192.168.1.254") 
+
+    returns
+
+    {
+	"5cdad4123456" => Device::RadioThermostat(address => 'http://192.168.1.76'),
+	"5cdad4654321" => Device::RadioThermostat(address => 'http://192.168.1.183')
+    }
+
 =head2 tstat
 
 Retrieve a hash of lots of info on the current thermostat state.  Possible keys
 include: C<temp>, C<tmode>, C<fmode>, C<override>, C<hold>, C<t_heat>,
 C<t_cool>, C<it_heat>, C<It_cool>, C<a_heat>, C<a_cool>, C<a_mode>,
 C<t_type_post>, C<t_state>.  For a description of their values see the
+L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
+
+=head2 sys
+
+Retrieve a hash of lots of info on the current thermostat itself.  Possible keys
+include: C<uuid>, C<api_version>, C<fw_version>, C<wlan_fw_version>.
+For a description of their values see the
 L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
 
 =head2 set_mode($mode)
@@ -260,6 +337,11 @@ does still work with the latest firmware. Sample data:
                          'cool_runtime' => { 'minute' => 14, 'hour' => 0 }
                        }
             };
+
+=head2 get_uuid
+
+Returns the unique ID of the thermostat which is the MAC address. This helps
+distinguish thermostats when there are many on the same network.
 
 =head1 AUTHOR
 

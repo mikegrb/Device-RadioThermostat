@@ -25,12 +25,34 @@ For additional information on the arguments and values returned see the
 Constructor takes named parameters.  Currently only `address` which should be
 the HTTP URL for the thermostat.
 
+## find_all(address1, address2)
+
+This finds all the thermostats in the address range and returns a reference to a hash
+which contains Device::RadioThermostat objects indexed by the device uuid. For example,
+it might return a structure as follows:
+
+    Device::RadioThermostat->find_all("192.168.1.1", "192.168.1.254") 
+
+    returns
+
+    {
+	"5cdad4123456" => Device::RadioThermostat(address => 'http://192.168.1.76'),
+	"5cdad4654321" => Device::RadioThermostat(address => 'http://192.168.1.183')
+    }
+
 ## tstat
 
 Retrieve a hash of lots of info on the current thermostat state.  Possible keys
 include: `temp`, `tmode`, `fmode`, `override`, `hold`, `t_heat`,
 `t_cool`, `it_heat`, `It_cool`, `a_heat`, `a_cool`, `a_mode`,
 `t_type_post`, `t_state`.  For a description of their values see the
+[RTCOA API documentation (pdf)](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
+
+## sys
+
+Retrieve a hash of lots of info on the current thermostat itself.  Possible keys
+include: `uuid`, `api_version`, `fw_version`, `wlan_fw_version`.
+For a description of their values see the
 [RTCOA API documentation (pdf)](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1\_3.pdf).
 
 ## set\_mode($mode)
@@ -120,6 +142,11 @@ does still work with the latest firmware. Sample data:
                          'cool_runtime' => { 'minute' => 14, 'hour' => 0 }
                        }
             };
+
+## get_uuid
+
+Returns the unique ID of the thermostat which is the MAC address. This helps
+distinguish thermostats when there are many on the same network.
 
 # AUTHOR
 

@@ -37,8 +37,10 @@
       },
       "runtime" : {
          "requires" : {
-            "Mojolicious" : "0",
-            "perl" : "5.010001"
+            "LWP::UserAgent" : "0",
+            "perl" : "5.008001",
+	    "IO::Socket": "0",
+	    "Time::HiRes": "0"
          }
       },
       "test" : {
