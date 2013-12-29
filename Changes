@@ -1,6 +1,10 @@
 Revision history for Device-RadioThermostat
 
 {{$NEXT}}
+        - Lots of good stuff contributed by Philip Gladstone:
+        - Support older Perl 5.8
+        - get_uuid support
+        - find_all method to auto-discover RTCoA thermostats on the network
 
 0.02  2013-09-10 22:06:25 EDT
         - Add datalog method
