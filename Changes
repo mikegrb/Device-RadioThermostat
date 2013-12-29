@@ -1,6 +1,8 @@
 Revision history for Device-RadioThermostat
 
 {{$NEXT}}
+
+0.03  2013-12-29 02:33:59 EST
         - Lots of good stuff contributed by Philip Gladstone:
         - Support older Perl 5.8
         - get_uuid support
