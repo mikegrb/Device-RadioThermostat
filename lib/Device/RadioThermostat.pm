@@ -7,8 +7,11 @@ use 5.008_001;
 our $VERSION = '0.03';
 
 use Carp;
-use LWP::UserAgent;
 use JSON;
+use Socket 'inet_aton';
+use Time::HiRes 'usleep';
+use LWP::UserAgent;
+use IO::Socket::INET;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -24,46 +27,45 @@ sub find_all {
     my ( $class, $low, $high ) = @_;
     croak 'Must pass two addresses to find_all.' unless $low && $high;
 
-    use IO::Socket::INET;
-    use Time::HiRes qw(usleep);
+    my $lowint  = unpack( "N", inet_aton($low) );
+    my $highint = unpack( "N", inet_aton($high) );
 
     my $s = IO::Socket::INET->new(Proto => 'udp') || croak @$;
 
-    for (my $retry = 0; $retry < 3; $retry++) {
-	my ($lowint) = unpack("N", inet_aton($low));
-	my ($highint) = unpack("N", inet_aton($high));
-	for (my $addr = $lowint; $addr <= $highint; $addr++) {
-	    my $hissockaddr = sockaddr_in(1900, pack("N", $addr));
-	    $s->send("TYPE: WM-DISCOVER\r\nVERSION: 1.0\r\n\r\nservices: com.marvell.wm.system*\r\n\r\n", 0, $hissockaddr);
-	    usleep 10000;
-	}
+    for ( 0 .. 4 ) { # retry 5 times
+        for ( my $addr = $lowint; $addr <= $highint; $addr++ ) {
+            my $hissockaddr = sockaddr_in( 1900, pack( "N", $addr ) );
+            $s->send(
+                "TYPE: WM-DISCOVER\r\n"
+                    . "VERSION: 1.0\r\n\r\n"
+                    . "services: com.marvell.wm.system*\r\n\r\n",
+                0, $hissockaddr
+            );
+            usleep 10000;
+        }
 
-	my $rin = "";
-	vec($rin, $s->fileno, 1) = 1;
-	my $rout;
+        my $rin = '';
+        vec($rin, $s->fileno, 1) = 1;
+        my ($rout, %result);
+        while (select($rout = $rin, undef, undef, 1)) {
+            my $response = '';
+            my $hispaddr = $s->recv( $response, 1024, 0 );
+            my ( $port, $hisiaddr ) = sockaddr_in($hispaddr);
+            my ($hisaddr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
+            next unless $hisaddr;
 
-	my %result;
+            my $tstat = Device::RadioThermostat->new(
+                address => 'http://' . $hisaddr );
+            my $uuid = $tstat->get_uuid();
+            next unless $uuid;
 
-	while (select($rout = $rin, undef, undef, 1)) {
-	    my $response = "";
-	    my $hispaddr = $s->recv($response, 1024, 0);
-	    my ($port, $hisiaddr) = sockaddr_in($hispaddr);
-	    my ($hisaddr) = $response =~ m!location:\s*http://([0-9.]+)/sys!i;
-	    next if (!$hisaddr);
+            $result{$uuid} = $tstat;
+        }
 
-	    my $tstat   = new Device::RadioThermostat(address => 'http://' . $hisaddr);
-	    my $uuid = $tstat->get_uuid();
-	    next if (!$uuid);
-
-	    $result{$uuid} = $tstat;
-	}
-
-	if (%result) {
-	    return \%result;
-	}
+        return \%result if %result;
     }
 
-    return undef;
+    return;
 }
 
 sub tstat {
@@ -171,7 +173,7 @@ sub _ua_post {
         return exists( $result->{success} ) ? 1 : 0;
     }
     else {
-	my ($code, $err) = ($response->code, $response->message);
+        my ($code, $err) = ($response->code, $response->message);
         carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
@@ -184,7 +186,7 @@ sub _ua_get {
         return decode_json $response->decoded_content();
     }
     else {
-	my ($code, $err) = ($response->code, $response->message);
+        my ($code, $err) = ($response->code, $response->message);
         carp $code ? "$code response: $err" : "Connection error: $err";
         return;
     }
@@ -226,13 +228,13 @@ This finds all the thermostats in the address range and returns a reference to a
 which contains Device::RadioThermostat objects indexed by the device uuid. For example,
 it might return a structure as follows:
 
-    Device::RadioThermostat->find_all("192.168.1.1", "192.168.1.254") 
+    Device::RadioThermostat->find_all("192.168.1.1", "192.168.1.254")
 
-    returns
+returns
 
     {
-	"5cdad4123456" => Device::RadioThermostat(address => 'http://192.168.1.76'),
-	"5cdad4654321" => Device::RadioThermostat(address => 'http://192.168.1.183')
+    "5cdad4123456" => Device::RadioThermostat(address => 'http://192.168.1.76'),
+    "5cdad4654321" => Device::RadioThermostat(address => 'http://192.168.1.183')
     }
 
 =head2 tstat
