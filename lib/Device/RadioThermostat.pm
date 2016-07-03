@@ -85,7 +85,7 @@ sub get_uuid {
 
 sub set_mode {
     my ( $self, $mode ) = @_;
-    return $self->_ua_post( '/tstat', { tmode => $mode } );
+    return $self->_ua_post( '/tstat', { tmode => int($mode) } );
 }
 
 sub get_target {
@@ -111,12 +111,12 @@ sub get_targets {
 
 sub temp_heat {
     my ( $self, $temp ) = @_;
-    return $self->_ua_post( '/tstat', { t_heat => $temp } );
+    return $self->_ua_post( '/tstat', { t_heat => 0 + $temp } );
 }
 
 sub temp_cool {
     my ( $self, $temp ) = @_;
-    return $self->_ua_post( '/tstat', { t_cool => $temp } );
+    return $self->_ua_post( '/tstat', { t_cool => 0 + $temp } );
 }
 
 sub remote_temp {
@@ -137,19 +137,19 @@ sub set_remote_temp {
 sub lock {
     my ($self, $mode) = @_;
     if ($mode) {
-        return unless $self->_ua_post( '/tstat/lock', { lock_mode => $mode } );
+        return unless $self->_ua_post( '/tstat/lock', { lock_mode => int($mode) } );
     }
     return $self->_ua_get('/tstat/lock');
 }
 
 sub user_message {
     my ( $self, $line, $message ) = @_;
-    return $self->_ua_post( '/tstat/uma', { line => $line, message => $message } );
+    return $self->_ua_post( '/tstat/uma', { line => int($line), message => $message } );
 }
 
 sub price_message {
     my ( $self, $line, $message ) = @_;
-    return $self->_ua_post( '/tstat/pma', { line => $line, message => $message } );
+    return $self->_ua_post( '/tstat/pma', { line => int($line), message => $message } );
 }
 
 sub clear_message {
