@@ -1,6 +1,8 @@
 Revision history for Device-RadioThermostat
 
 {{$NEXT}}
+
+0.04  2016-07-02 21:17:58 EDT
         - Better CT-80 Support (humidity & messages) from Timo Kokkonen (tjko) #2
         - ensure ints are ints not strings in generated JSON from tjko #2
 
