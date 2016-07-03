@@ -55,6 +55,11 @@ include: `uuid`, `api_version`, `fw_version`, `wlan_fw_version`.
 For a description of their values see the
 [RTCOA API documentation (pdf)](http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf).
 
+## model
+
+Retrieve a hash with information about the current thermostat model.
+Currently hash only has key `model`.
+
 ## set\_mode($mode)
 
 Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
@@ -69,6 +74,11 @@ element array containing the cooling and heating set points.
 ## get\_targets
 
 Returns a reference to a hash of the set points.  Keys are `t_cool` and `t_heat`.
+
+## get\_humidity
+
+Returns a reference to a hash containing current relative humidity 
+(only supported by CT-80 Thermostats). Key is `humidity`.
 
 ## temp\_heat($temp)
 
@@ -110,8 +120,9 @@ mode change or no mode specified, returns the current mode.  Mode is an integer,
 ## user\_message($line, $message)
 
 Display a message on one of the two lines of alphanumeric display at the bottom
-of the thermostat.  Valid values for line are 0 and 1.  Messages too long will
-scroll.  This is only supported by the CT-80 model thermostats.
+of the thermostat.  Valid values for line are 0 and 1. 
+This is only supported by the CT-80 model thermostats. CT-80 Thermostat supports
+2 rows of alphanumeric strings of 26 characters in length.
 
 ## price\_message($line, $message)
 
@@ -121,10 +132,20 @@ for different lines are rotated through.  I believe line number used will cause
 an indicator for units to display based on the number used but it's not
 mentioned in the API docs and I'm not home currently.
 
+CT-80 model thermostats support displaying 2 alphanumeric strings of 6 characters
+in length in the price message area.
+
 ## clear\_message
 
-Clears the `price_message` area.  May also clear the `user_message`, I'd
-appreciate someone with a CT-80 letting me know.
+Clears the `price_message` area.
+
+## clear\_price\_message
+
+Clears the `price_message` area.
+
+## clear\_user\_message
+
+Clears the `user_message` area.
 
 ## datalog
 
