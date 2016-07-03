@@ -78,6 +78,11 @@ sub sys {
     return $self->_ua_get('/sys');
 }
 
+sub model {
+    my $self = shift;
+    return $self->_ua_get('/tstat/model');
+}
+
 sub get_uuid {
     my $self = shift;
     return $self->sys()->{uuid};
@@ -107,6 +112,11 @@ sub get_target {
 sub get_targets {
     my ($self) = @_;
     return $self->_ua_get('/tstat/ttemp');
+}
+
+sub get_humidity {
+    my ($self) = @_;
+    return $self->_ua_get('/tstat/humidity');
 }
 
 sub temp_heat {
@@ -152,9 +162,19 @@ sub price_message {
     return $self->_ua_post( '/tstat/pma', { line => int($line), message => $message } );
 }
 
-sub clear_message {
+sub clear_user_message {
+    my ($self) = @_;
+    return $self->_ua_post( '/tstat/uma', { mode => 0 } );
+}
+
+sub clear_price_message {
     my ($self) = @_;
     return $self->_ua_post( '/tstat/pma', { mode => 0 } );
+}
+
+sub clear_message {
+    my ($self) = @_;
+    return $self->clear_price_message();
 }
 
 sub datalog {
@@ -252,6 +272,11 @@ include: C<uuid>, C<api_version>, C<fw_version>, C<wlan_fw_version>.
 For a description of their values see the
 L<RTCOA API documentation (pdf)|http://www.radiothermostat.com/documents/RTCOAWiFIAPIV1_3.pdf>.
 
+=head2 model
+
+Retrieve a hash with information about the current thermostat model.
+Currently hash only has key C<model>.
+
 =head2 set_mode($mode)
 
 Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
@@ -266,6 +291,11 @@ element array containing the cooling and heating set points.
 =head2 get_targets
 
 Returns a reference to a hash of the set points.  Keys are C<t_cool> and C<t_heat>.
+
+=head2 get_humidity
+
+Returns a reference to a hash containing current relative humidity 
+(only supported by CT-80 Thermostats). Key is C<humidity>.
 
 =head2 temp_heat($temp)
 
@@ -307,8 +337,9 @@ mode change or no mode specified, returns the current mode.  Mode is an integer,
 =head2 user_message($line, $message)
 
 Display a message on one of the two lines of alphanumeric display at the bottom
-of the thermostat.  Valid values for line are 0 and 1.  Messages too long will
-scroll.  This is only supported by the CT-80 model thermostats.
+of the thermostat.  Valid values for line are 0 and 1. 
+This is only supported by the CT-80 model thermostats. CT-80 Thermostat supports
+2 rows of alphanumeric strings of 26 characters in length.
 
 =head2 price_message($line, $message)
 
@@ -318,10 +349,20 @@ for different lines are rotated through.  I believe line number used will cause
 an indicator for units to display based on the number used but it's not
 mentioned in the API docs and I'm not home currently.
 
+CT-80 model thermostats support displaying 2 alphanumeric strings of 6 characters
+in lenght in the price message area.
+
 =head2 clear_message
 
-Clears the C<price_message> area.  May also clear the C<user_message>, I'd
-appreciate someone with a CT-80 letting me know.
+Clears the C<price_message> area.
+
+=head2 clear_price_message
+
+Clears the C<price_message> area.
+
+=head2 clear_user_message
+
+Clears the C<user_message> area.
 
 =head2 datalog
 
