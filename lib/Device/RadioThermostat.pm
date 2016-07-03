@@ -350,7 +350,7 @@ an indicator for units to display based on the number used but it's not
 mentioned in the API docs and I'm not home currently.
 
 CT-80 model thermostats support displaying 2 alphanumeric strings of 6 characters
-in lenght in the price message area.
+in length in the price message area.
 
 =head2 clear_message
 
