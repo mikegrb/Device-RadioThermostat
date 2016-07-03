@@ -93,6 +93,11 @@ sub set_mode {
     return $self->_ua_post( '/tstat', { tmode => int($mode) } );
 }
 
+sub set_fanmode {
+    my ( $self, $mode ) = @_;
+    return $self->_ua_post( '/tstat', { fmode => int($mode) } );
+}
+
 sub get_target {
     my ($self) = @_;
     my $mode = $self->tstat->{tmode};
@@ -180,6 +185,21 @@ sub clear_message {
 sub datalog {
     my ($self) = @_;
     return $self->_ua_get('/tstat/datalog');
+}
+
+sub set_led {
+    my ($self, $led) = @_;
+    return $self->_ua_post( '/tstat/led', { energy_led => int($led) } );
+}
+
+sub set_clock {
+    my ($self, $day, $hour, $minute) = @_;
+    return $self->_ua_post( '/tstat', { time => { 
+	                                          day => int($day), 
+						  hour => int($hour), 
+						  minute => int($minute) 
+					         } 
+			              } );
 }
 
 sub _ua_post {
@@ -279,8 +299,21 @@ Currently hash only has key C<model>.
 
 =head2 set_mode($mode)
 
-Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
-heating, 2 for cooling, and 3 for auto.
+Takes a single integer argument for your desired thermostat operating mode. Values are:
+
+  0 = OFF
+  1 = HEAT
+  2 = COOL
+  3 = AUTO
+
+=head2 set_fanmode($mode)
+
+Takes a single integer argument for your desired fan operating mode
+Values are:
+
+  0 = AUTO
+  1 = AUTO/CIRCULATE
+  2 = ON 
 
 =head2 get_target
 
@@ -385,6 +418,28 @@ does still work with the latest firmware. Sample data:
 
 Returns the unique ID of the thermostat which is the MAC address. This helps
 distinguish thermostats when there are many on the same network.
+
+=head2 set_led($led)
+
+Control the energy status LED on the thermostat.
+Parameter C<led> is integer that can be set to one of the following values:
+
+ 0 = Off
+ 1 = Green
+ 2 = Yellow
+ 4 = Red
+
+Note, led stat is volatile. Thermostat or WiFi module may change the LED status
+during reboot, or other operation.
+
+=head2 set_clock($day, $hour, $minute) 
+
+Set thermostat internal clock. Parameters use following format:
+
+   day = 0..6  (0=Monday)
+  hour = 0..23  
+minute = 0..59
+
 
 =head1 AUTHOR
 
