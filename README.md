@@ -65,6 +65,11 @@ Currently hash only has key `model`.
 Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
 heating, 2 for cooling, and 3 for auto.
 
+## set\_fan\_mode($mode)
+
+Takes a single integer argument for desired fan mode.  Values are 0
+for auto, 1 for auto with hourly circulation, 2 for fan always on.
+
 ## get\_target
 
 Returns undef if current mode is off.  Returns heat or cooling set point based
@@ -79,6 +84,38 @@ Returns a reference to a hash of the set points.  Keys are `t_cool` and `t_heat`
 
 Returns a reference to a hash containing current relative humidity 
 (only supported by CT-80 Thermostats). Key is `humidity`.
+
+## get\_humidifier\_mode
+
+## set\_humidifier\_mode($mode)
+
+Retrieve and set the current humidifier mode as an integer.  Values
+for $mode can be 0 for off, 1 for run only with heat and 2 for run
+anytime.
+
+## get\_humidifier\_target
+
+## set\_humidifier\_target($setpoint)
+
+Retrieve and set the current humidifier setpoint as an integer.  Value
+of $setpoint should be an integer between 1 and 99 representing the
+relative humidity setpoint for the humidifier.
+
+## get\_dehumidifier\_mode
+
+## set\_dehumidifier\_mode($mode)
+
+Retrieve and set the current AC dehumidifier mode as an integer.
+Values for $mode can be 0 for off, 1 for run only with cool and 2 for
+run anytime.
+
+## get\_dehumidifier\_target
+
+## set\_dehumidifier\_target($setpoint)
+
+Retrieve and set the current AC dehumidifier setpoint as an integer.
+Value of $setpoint should be an integer between 1 and 99 representing
+the relative humidity setpoint for the dehumidifier.
 
 ## temp\_heat($temp)
 
@@ -116,6 +153,31 @@ sensor.
 With mode specified, sets mode and returns false on failure.  With successful
 mode change or no mode specified, returns the current mode.  Mode is an integer,
 0 - disabled, 1 - partial lock, 2 - full lock, 3 - utility lock.
+
+## temp\_hold($hold)
+
+Instruct the thermostat to hold the current temperature or not.  A
+$hold value of 0 indicates that the current temporary setpoint will
+reset when the next scheduled setpoint time is reached.  A $hold value
+of 1 indicates that the current temporary setpoint will be kept until
+changed manually.
+
+## set\_time($local\_time)
+
+Set the current time on the thermostat device.  $local\_time is
+a time value as returned by localtime().
+
+## set\_localtime
+
+Set the current time on the thermostat device to the current local
+time, as reported on the current system by the localtime() function.
+
+## get\_time
+
+Return the current time on the thermostat device, as a time value as
+returned by localtime().  The device does not report seconds, month or
+year, so the returned value may not match exactly the time on the
+current system.
 
 ## user\_message($line, $message)
 

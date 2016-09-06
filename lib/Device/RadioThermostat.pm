@@ -10,6 +10,7 @@ use Carp;
 use JSON;
 use Socket 'inet_aton';
 use Time::HiRes 'usleep';
+use Time::Local;
 use LWP::UserAgent;
 use IO::Socket::INET;
 
@@ -93,6 +94,11 @@ sub set_mode {
     return $self->_ua_post( '/tstat', { tmode => int($mode) } );
 }
 
+sub set_fan_mode {
+    my ( $self, $mode ) = @_;
+    return $self->_ua_post( '/tstat', { fmode => int($mode) } );
+}
+
 sub get_target {
     my ($self) = @_;
     my $mode = $self->tstat->{tmode};
@@ -114,11 +120,100 @@ sub get_targets {
     return $self->_ua_get('/tstat/ttemp');
 }
 
+sub get_time {
+    my ($self) = @_;
+    my $tstat = $self->tstat();
+    my $t = $tstat->{time};
+    my @now = localtime();
+
+    my @tt = localtime(timelocal(@now)+($t->{day}+1-$now[6])*86400);
+    $tt[0] = 0;
+    $tt[1] = $t->{minute};
+    $tt[2] = $t->{hour};
+
+    return timelocal(@tt);
+}
+
+sub set_time {
+    my ($self,$t) = @_;
+    my @tt = localtime($t);
+
+    my $day = ($tt[6]+7-1)%7;
+    my $minute = $tt[1];
+    my $hour = $tt[2];
+    
+    return $self->_ua_post('/tstat', { time => { day => int($day), hour => int($hour), minute => int($minute) } } );
+}
+
+sub set_localtime {
+  my ($self) = @_;
+
+  return $self->set_time(timelocal(localtime()));
+}
+
 sub get_humidity {
     my ($self) = @_;
     return $self->_ua_get('/tstat/humidity');
 }
 
+sub get_humidifier {
+    my ($self) = @_;
+    my $h1 = $self->_ua_get('/tstat/humidifier');
+    my $h2 = $self->_ua_get('/tstat/thumidity');
+    $h1->{thumidity} = $h2->{thumidity};
+    return $h1;
+}
+
+sub get_humidifier_mode {
+    my ($self) = @_;
+    return $self->get_humidifier()->{humidifier_mode};
+}
+
+sub get_humidifier_target {
+    my ($self) = @_;
+    return $self->get_humidifier()->{thumidity};
+}
+
+sub set_humidifier_mode {
+    my ($self, $mode) = @_;
+    return $self->_ua_post('/tstat/humidifier', { humidifier_mode => int($mode) });
+}
+
+sub set_humidifier_target {
+    my ($self, $target) = @_;
+    return $self->_ua_post('/tstat/thumidity', { thumidity => int($target) });
+}
+
+sub get_dehumidifier {
+    my ($self) = @_;
+    return $self->_ua_get('/tstat/dehumidifier');
+}
+
+sub get_dehumidifier_mode {
+    my ($self) = @_;
+    return $self->get_dehumidifier()->{mode};
+}
+
+sub get_dehumidifier_target {
+    my ($self) = @_;
+    return $self->get_dehumidifier()->{setpoint};
+}
+
+sub set_dehumidifier_mode {
+    my ($self, $mode) = @_;
+    return $self->_ua_post('/tstat/dehumidifier', { mode => int($mode) });
+}
+
+sub set_dehumidifier_target {
+    my ($self, $target) = @_;
+    return $self->_ua_post('/tstat/dehumidifier', { setpoint => int($target) });
+}
+
+sub temp_hold {
+    my ( $self, $hold ) = @_;
+    return $self->_ua_post( '/tstat', { hold => ($hold) ? 1 : 0 } );
+}
+    
 sub temp_heat {
     my ( $self, $temp ) = @_;
     return $self->_ua_post( '/tstat', { t_heat => 0 + $temp } );
@@ -146,7 +241,7 @@ sub set_remote_temp {
 
 sub lock {
     my ($self, $mode) = @_;
-    if ($mode) {
+    if (defined($mode)) {
         return unless $self->_ua_post( '/tstat/lock', { lock_mode => int($mode) } );
     }
     return $self->_ua_get('/tstat/lock');
@@ -282,6 +377,11 @@ Currently hash only has key C<model>.
 Takes a single integer argument for your desired mode. Values are 0 for off, 1 for
 heating, 2 for cooling, and 3 for auto.
 
+=head2 set_fan_mode($mode)
+
+Takes a single integer argument for desired fan mode.  Values are 0
+for auto, 1 for auto with hourly circulation, 2 for fan always on.
+
 =head2 get_target
 
 Returns undef if current mode is off.  Returns heat or cooling set point based
@@ -296,6 +396,39 @@ Returns a reference to a hash of the set points.  Keys are C<t_cool> and C<t_hea
 
 Returns a reference to a hash containing current relative humidity 
 (only supported by CT-80 Thermostats). Key is C<humidity>.
+
+=head2 get_humidifier_mode
+
+=head2 set_humidifier_mode($mode)
+
+Retrieve and set the current humidifier mode as an integer.  Values
+for $mode can be 0 for off, 1 for run only with heat and 2 for run
+anytime.
+
+=head2 get_humidifier_target
+
+=head2 set_humidifier_target($setpoint)
+
+Retrieve and set the current humidifier setpoint as an integer.  Value
+of $setpoint should be an integer between 1 and 99 representing the
+relative humidity setpoint for the humidifier.
+
+
+=head2 get_dehumidifier_mode
+
+=head2 set_dehumidifier_mode($mode)
+
+Retrieve and set the current AC dehumidifier mode as an integer.
+Values for $mode can be 0 for off, 1 for run only with cool and 2 for
+run anytime.
+
+=head2 get_dehumidifier_target
+
+=head2 set_dehumidifier_target($setpoint)
+
+Retrieve and set the current AC dehumidifier setpoint as an integer.
+Value of $setpoint should be an integer between 1 and 99 representing
+the relative humidity setpoint for the dehumidifier.
 
 =head2 temp_heat($temp)
 
@@ -333,6 +466,32 @@ sensor.
 With mode specified, sets mode and returns false on failure.  With successful
 mode change or no mode specified, returns the current mode.  Mode is an integer,
 0 - disabled, 1 - partial lock, 2 - full lock, 3 - utility lock.
+
+=head2 temp_hold($hold)
+
+Instruct the thermostat to hold the current temperature or not.  A
+$hold value of 0 indicates that the current temporary setpoint will
+reset when the next scheduled setpoint time is reached.  A $hold value
+of 1 indicates that the current temporary setpoint will be kept until
+changed manually.
+
+=head2 set_time($local_time)
+
+Set the current time on the thermostat device.  $local_time is
+a time value as returned by localtime().
+
+=head2 set_localtime
+
+Set the current time on the thermostat device to the current local
+time, as reported on the current system by the localtime() function.
+
+=head2 get_time
+
+Return the current time on the thermostat device, as a time value as
+returned by localtime().  The device does not report seconds, month or
+year, so the returned value may not match exactly the time on the
+current system.
+
 
 =head2 user_message($line, $message)
 
